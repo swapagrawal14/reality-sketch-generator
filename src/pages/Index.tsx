@@ -1,12 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Palette, AlertTriangle, Download, Copy, Check } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Loader2, Palette, AlertTriangle, Download, Copy, Check, Moon, Sun, Shuffle, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/contexts/ThemeContext';
+import { getRandomPrompt, enhancePrompt } from '@/utils/promptUtils';
 
 const SwapMemes = () => {
   const [apiKey, setApiKey] = useState('');
@@ -17,6 +19,7 @@ const SwapMemes = () => {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
+  const { isDarkMode, toggleDarkMode } = useTheme();
 
   // Load API key from localStorage on component mount
   useEffect(() => {
@@ -50,6 +53,29 @@ Style requirements:
 - Clear visual metaphors that make the social commentary obvious
 
 The cartoon should be thought-provoking and capture the irony or reality of modern life as described in the concept.`;
+  };
+
+  const handleRandomPrompt = () => {
+    const randomPrompt = getRandomPrompt();
+    setMemeConcept(randomPrompt);
+    toast({
+      title: "Random Prompt Generated!",
+      description: "A new satirical concept has been loaded for you.",
+    });
+  };
+
+  const handleEnhancePrompt = () => {
+    if (!memeConcept.trim()) {
+      setError('Please enter a meme concept first to enhance it');
+      return;
+    }
+    
+    const enhancedPrompt = enhancePrompt(memeConcept);
+    setMemeConcept(enhancedPrompt);
+    toast({
+      title: "Prompt Enhanced!",
+      description: "Your concept has been enriched with additional context.",
+    });
   };
 
   const generateMeme = async () => {
@@ -202,25 +228,42 @@ The cartoon should be thought-provoking and capture the irony or reality of mode
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDarkMode 
+        ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white' 
+        : 'bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-900'
+    }`}>
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Header */}
+        {/* Header with Dark Mode Toggle */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Palette className="w-8 h-8 text-blue-400" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Swap Memes
-            </h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Palette className="w-8 h-8 text-blue-400" />
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Swap Memes
+              </h1>
+            </div>
+            
+            {/* Dark Mode Toggle */}
+            <div className="flex items-center gap-2">
+              <Sun className={`w-4 h-4 ${isDarkMode ? 'text-slate-400' : 'text-yellow-500'}`} />
+              <Switch 
+                checked={isDarkMode} 
+                onCheckedChange={toggleDarkMode}
+                className="data-[state=checked]:bg-blue-600"
+              />
+              <Moon className={`w-4 h-4 ${isDarkMode ? 'text-blue-400' : 'text-slate-400'}`} />
+            </div>
           </div>
-          <p className="text-slate-300 text-lg max-w-2xl mx-auto">
+          <p className={`text-lg max-w-2xl mx-auto ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>
             Transform your observations about modern life into thought-provoking editorial cartoons using AI
           </p>
         </div>
 
         {/* Security Warning */}
-        <Alert className="mb-6 border-amber-500/50 bg-amber-500/10">
-          <AlertTriangle className="h-4 w-4 text-amber-400" />
-          <AlertDescription className="text-amber-200">
+        <Alert className={`mb-6 ${isDarkMode ? 'border-amber-500/50 bg-amber-500/10' : 'border-amber-400 bg-amber-50'}`}>
+          <AlertTriangle className={`h-4 w-4 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
+          <AlertDescription className={isDarkMode ? 'text-amber-200' : 'text-amber-800'}>
             <strong>Security Notice:</strong> Your API key is stored locally in your browser and sent directly to Google's servers. 
             Never share your API key or use it on public/shared computers.
           </AlertDescription>
@@ -228,9 +271,9 @@ The cartoon should be thought-provoking and capture the irony or reality of mode
 
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Input Section */}
-          <Card className="bg-slate-800/50 border-slate-700">
+          <Card className={`${isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'}`}>
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className={`flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 <Palette className="w-5 h-5 text-blue-400" />
                 Create Your Cartoon
               </CardTitle>
@@ -238,7 +281,7 @@ The cartoon should be thought-provoking and capture the irony or reality of mode
             <CardContent className="space-y-6">
               {/* API Key Input */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className={`text-sm font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
                   Google Gemini API Key
                 </label>
                 <Input
@@ -246,9 +289,9 @@ The cartoon should be thought-provoking and capture the irony or reality of mode
                   placeholder="Enter your API key..."
                   value={apiKey}
                   onChange={(e) => handleApiKeyChange(e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
+                  className={`${isDarkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                 />
-                <p className="text-xs text-slate-400">
+                <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
                   Get your API key from{' '}
                   <a 
                     href="https://console.cloud.google.com/apis/credentials" 
@@ -263,25 +306,48 @@ The cartoon should be thought-provoking and capture the irony or reality of mode
 
               {/* Meme Concept Input */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className={`text-sm font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>
                   Your Meme Concept
                 </label>
+                
+                {/* Prompt Action Buttons */}
+                <div className="flex gap-2 mb-2">
+                  <Button
+                    onClick={handleRandomPrompt}
+                    variant="outline"
+                    size="sm"
+                    className={`flex-1 ${isDarkMode ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    <Shuffle className="w-3 h-3 mr-1" />
+                    Random
+                  </Button>
+                  <Button
+                    onClick={handleEnhancePrompt}
+                    variant="outline"
+                    size="sm"
+                    className={`flex-1 ${isDarkMode ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Enhance
+                  </Button>
+                </div>
+                
                 <Textarea
                   placeholder="Describe a modern life irony or social observation..."
                   value={memeConcept}
                   onChange={(e) => setMemeConcept(e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white placeholder-slate-400 min-h-[120px]"
+                  className={`min-h-[120px] ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
                 />
                 
                 {/* Example Concepts */}
                 <div className="space-y-2">
-                  <p className="text-xs text-slate-400">Example concepts:</p>
+                  <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Example concepts:</p>
                   <div className="flex flex-wrap gap-1">
                     {exampleConcepts.map((concept, index) => (
                       <button
                         key={index}
                         onClick={() => setMemeConcept(concept)}
-                        className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-2 py-1 rounded transition-colors"
+                        className={`text-xs px-2 py-1 rounded transition-colors ${isDarkMode ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
                       >
                         {concept.slice(0, 30)}...
                       </button>
@@ -311,9 +377,9 @@ The cartoon should be thought-provoking and capture the irony or reality of mode
 
               {/* Error Display */}
               {error && (
-                <Alert className="border-red-500/50 bg-red-500/10">
-                  <AlertTriangle className="h-4 w-4 text-red-400" />
-                  <AlertDescription className="text-red-200">
+                <Alert className={`${isDarkMode ? 'border-red-500/50 bg-red-500/10' : 'border-red-400 bg-red-50'}`}>
+                  <AlertTriangle className={`h-4 w-4 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`} />
+                  <AlertDescription className={isDarkMode ? 'text-red-200' : 'text-red-800'}>
                     {error}
                   </AlertDescription>
                 </Alert>
@@ -322,17 +388,17 @@ The cartoon should be thought-provoking and capture the irony or reality of mode
           </Card>
 
           {/* Results Section */}
-          <Card className="bg-slate-800/50 border-slate-700">
+          <Card className={`${isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-gray-200'}`}>
             <CardHeader>
-              <CardTitle className="text-white">Your Generated Cartoon</CardTitle>
+              <CardTitle className={isDarkMode ? 'text-white' : 'text-gray-900'}>Your Generated Cartoon</CardTitle>
             </CardHeader>
             <CardContent>
               {generatedImage ? (
                 <div className="space-y-4">
                   {/* Original Concept */}
-                  <div className="bg-slate-700/50 p-4 rounded-lg">
-                    <h3 className="text-sm font-medium text-slate-300 mb-2">Your Concept:</h3>
-                    <p className="text-slate-200 italic">"{memeConcept}"</p>
+                  <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-slate-700/50' : 'bg-gray-50'}`}>
+                    <h3 className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>Your Concept:</h3>
+                    <p className={`italic ${isDarkMode ? 'text-slate-200' : 'text-gray-800'}`}>"{memeConcept}"</p>
                   </div>
 
                   {/* Generated Image */}
@@ -346,9 +412,9 @@ The cartoon should be thought-provoking and capture the irony or reality of mode
 
                   {/* AI Text Response */}
                   {generatedText && (
-                    <div className="bg-slate-700/50 p-4 rounded-lg">
-                      <h3 className="text-sm font-medium text-slate-300 mb-2">AI Commentary:</h3>
-                      <p className="text-slate-200 text-sm">{generatedText}</p>
+                    <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-slate-700/50' : 'bg-gray-50'}`}>
+                      <h3 className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>AI Commentary:</h3>
+                      <p className={`text-sm ${isDarkMode ? 'text-slate-200' : 'text-gray-800'}`}>{generatedText}</p>
                     </div>
                   )}
 
@@ -357,7 +423,7 @@ The cartoon should be thought-provoking and capture the irony or reality of mode
                     <Button
                       onClick={downloadImage}
                       variant="outline"
-                      className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
+                      className={`flex-1 ${isDarkMode ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                     >
                       <Download className="w-4 h-4 mr-2" />
                       Download
@@ -365,7 +431,7 @@ The cartoon should be thought-provoking and capture the irony or reality of mode
                     <Button
                       onClick={copyToClipboard}
                       variant="outline"
-                      className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
+                      className={`flex-1 ${isDarkMode ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                     >
                       {copied ? (
                         <>
@@ -383,8 +449,8 @@ The cartoon should be thought-provoking and capture the irony or reality of mode
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <Palette className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                  <p className="text-slate-400">
+                  <Palette className={`w-16 h-16 mx-auto mb-4 ${isDarkMode ? 'text-slate-600' : 'text-gray-400'}`} />
+                  <p className={isDarkMode ? 'text-slate-400' : 'text-gray-500'}>
                     {isGenerating ? 'Creating your cartoon...' : 'Your generated cartoon will appear here'}
                   </p>
                   {isGenerating && (
@@ -399,7 +465,7 @@ The cartoon should be thought-provoking and capture the irony or reality of mode
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-12 text-slate-400 text-sm">
+        <div className={`text-center mt-12 text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
           <p>Powered by Google's Gemini AI • Transform reality into art</p>
         </div>
       </div>
